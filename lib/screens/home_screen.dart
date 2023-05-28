@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gym_examen_final/models/weight_model.dart';
 import 'package:gym_examen_final/services/weight_services.dart';
-import 'package:gym_examen_final/widgets/card_weight.dart';
+import 'package:gym_examen_final/widgets/widgets.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -17,23 +17,19 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     weightService.fetchWeights().then((_) {
       setState(() {
-        // Actualiza el estado de la lista de pesos
         weights = weightService.weights;
       });
     }).catchError((error) {
-      // Maneja cualquier error que ocurra durante la obtención de los datos
-      print('Error fetching weights: $error');
+      print('Error al obtener los pesos');
     });
   }
 
   Future<void> fetchWeights() async {
     try {
       await weightService.fetchWeights();
-      setState(() {
-        // No asignar fetchedWeights ya que fetchWeights() es de tipo Future<void>
-      });
+      setState(() {});
     } catch (e) {
-      // Handle error
+      print('Error al obtener los pesos');
     }
   }
 
@@ -53,7 +49,12 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
         onPressed: () {
-          // Navegar a la pantalla de agregar peso
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => WeightForm(),
+            ),
+          );
         },
       ),
     );

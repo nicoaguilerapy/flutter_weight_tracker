@@ -14,14 +14,14 @@ class WeightService extends ChangeNotifier {
 
   Future<void> fetchWeights() async {
     final response = await http.get(Uri.parse(apiUrl));
-    print(response.body); // Verifica el cuerpo de la respuesta en la consola
+    print(response.body);
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       _weights = data.map((json) => Weight.fromJson(json)).toList();
       notifyListeners();
     } else {
-      throw Exception('Failed to fetch weights');
+      throw Exception('Error al obtener los pesos');
     }
   }
 
