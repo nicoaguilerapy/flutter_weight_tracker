@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gym_examen_final/models/weight_model.dart';
 import 'package:gym_examen_final/services/weight_services.dart';
 import 'package:gym_examen_final/widgets/widgets.dart';
+import 'package:gym_examen_final/screens/screens.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -43,7 +44,17 @@ class _HomeScreenState extends State<HomeScreen> {
         itemCount: weights.length,
         itemBuilder: (context, index) {
           final weight = weights[index];
-          return CardWeight(weight: weight);
+          return InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => WeightScreen(weight: weight),
+                ),
+              );
+            },
+            child: CardWeight(weight: weight),
+          );
         },
       ),
       floatingActionButton: FloatingActionButton(
@@ -52,7 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => WeightForm(),
+              builder: (context) => WeightScreen(weight: null),
             ),
           );
         },
