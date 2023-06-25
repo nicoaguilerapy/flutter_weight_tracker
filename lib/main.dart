@@ -20,6 +20,7 @@ class WeightTrackerApp extends StatelessWidget {
           primarySwatch: Colors.indigo,
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
+        debugShowCheckedModeBanner: false,
         home: HomeScreen(),
       ),
     );

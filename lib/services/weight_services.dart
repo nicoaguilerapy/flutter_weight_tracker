@@ -6,48 +6,63 @@ import 'package:gym_examen_final/models/weight_model.dart';
 
 class WeightService extends ChangeNotifier {
   final String apiUrl =
-      'https://flutter-gym-app-10f50-default-rtdb.firebaseio.com/weights.json';
+      'https://flutter-gym-app-10f50-default-rtdb.firebaseio.com';
 
   List<Weight> _weights = [];
-
   List<Weight> get weights => _weights;
 
   Future<void> fetchWeights() async {
-    final response = await http.get(Uri.parse(apiUrl));
+    final response = await http.get(Uri.parse(apiUrl + '/weights.json'));
     print(response.body);
 
     if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      _weights = data.map((json) => Weight.fromJson(json)).toList();
+      final Map<String, dynamic> data = jsonDecode(response.body);
+      final updatedWeights = data.entries.map((entry) {
+        final weightData = entry.value as Map<String, dynamic>;
+        final weightId = entry.key;
+        weightData['id'] = weightId;
+        return Weight.fromJson(weightData);
+      }).toList();
+      _weights = updatedWeights;
       notifyListeners();
     } else {
       throw Exception('Error al obtener los pesos');
     }
   }
 
+  Future<Weight> createOrUpdateWeight(Weight weight) async {
+    if (weight.id == null || weight.id == '') {
+      return createWeight(weight);
+    } else {
+      return updateWeight(weight);
+    }
+  }
+
   Future<Weight> createWeight(Weight weight) async {
+    print('CREAR WEIGHT');
     final response = await http.post(
-      Uri.parse(apiUrl),
+      Uri.parse(apiUrl + '/weights.json'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(weight.toJson()),
     );
-    final List<dynamic> data = jsonDecode(response.body);
-    print(data); // Verifica los datos en la consola
-    if (response.statusCode == 201) {
-      final dynamic data = jsonDecode(response.body);
-      final newWeight = Weight.fromJson(data);
-      _weights.add(newWeight);
+
+    if (response.statusCode == 200) {
+      weight.id = jsonDecode(response.body)['name'];
+      _weights.add(weight);
       notifyListeners();
-      return newWeight;
+      return weight;
     } else {
-      throw Exception('Failed to create weight');
+      throw Exception('Error al crear el peso');
     }
   }
 
   Future<Weight> updateWeight(Weight weight) async {
-    final url = '$apiUrl/${weight.id}';
+    print('UPDATE WEIGHT');
+    print(weight.toJson());
+    final url = Uri.parse(apiUrl + '/weights/${weight.id}.json');
+
     final response = await http.put(
-      Uri.parse(url),
+      url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(weight.toJson()),
     );
@@ -61,18 +76,21 @@ class WeightService extends ChangeNotifier {
       }
       return updatedWeight;
     } else {
-      throw Exception('Failed to update weight');
+      throw Exception('Error al actualizar el peso');
     }
   }
 
   Future<void> deleteWeight(String id) async {
-    final url = '$apiUrl/$id';
-    final response = await http.delete(Uri.parse(url));
-    if (response.statusCode == 204) {
-      _weights.removeWhere((w) => w.id == id);
+    print('DELETE WEIGHT');
+    print(id);
+    final url = Uri.parse(apiUrl + '/weights/$id.json');
+    final response = await http.delete(url);
+
+    if (response.statusCode == 200) {
+      _weights.removeWhere((weight) => weight.id == id);
       notifyListeners();
     } else {
-      throw Exception('Failed to delete weight');
+      throw Exception('Error al eliminar el peso');
     }
   }
 }

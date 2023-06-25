@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gym_examen_final/models/weight_model.dart';
+import 'package:gym_examen_final/services/weight_services.dart';
 import 'package:intl/intl.dart';
 
 class WeightScreen extends StatefulWidget {
@@ -18,17 +19,23 @@ class _WeightScreenState extends State<WeightScreen> {
   late TextEditingController _repsController;
   final _dateFormatter = DateFormat('dd/MM/yyyy');
   final _dateValidator = _DateValidator(DateFormat('dd/MM/yyyy'));
+  String weightId = '';
 
   @override
   void initState() {
     super.initState();
+    print("------------------\nPeso a modificar:");
+    print(widget.weight?.toJson());
+    print("------------------");
     _nameController = TextEditingController(text: widget.weight?.name);
-    _selectedDate =
-        _dateFormatter.parse(widget.weight?.date ?? DateTime.now().toString());
+    _selectedDate = DateFormat('dd/MM/yyyy').parse(
+        widget.weight?.date.split(' ')[0] ??
+            DateFormat('dd/MM/yyyy').format(DateTime.now()));
     _valueController =
         TextEditingController(text: widget.weight?.value.toString());
     _repsController =
         TextEditingController(text: widget.weight?.reps.toString());
+    weightId = widget.weight?.id ?? weightId;
   }
 
   @override
@@ -43,7 +50,9 @@ class _WeightScreenState extends State<WeightScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('REGISTRAR PESO MAXIMO'),
+        title: Text(widget.weight != null
+            ? 'MODIFICAR PESO MÁXIMO'
+            : 'REGISTRAR PESO MÁXIMO'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -96,17 +105,71 @@ class _WeightScreenState extends State<WeightScreen> {
                 final dateFormatter = DateFormat('dd/MM/yyyy');
                 final formattedDate = dateFormatter.format(_selectedDate);
 
-                final weight = Weight(
+                Weight weight = Weight(
+                  id: weightId,
                   name: name,
                   date: formattedDate,
                   value: value,
                   reps: reps,
                 );
-
-                Navigator.pop(context);
+                print('------------------');
+                print(weight.toJson());
+                print('------------------');
+                WeightService weightService = WeightService();
+                weightService.createOrUpdateWeight(weight);
+                weightService.fetchWeights();
+                Navigator.pop(context, true);
               },
               child: Text('GUARDAR'),
             ),
+            SizedBox(height: 8),
+            if (widget.weight != null)
+              ElevatedButton.icon(
+                onPressed: () async {
+                  final confirmDelete = await showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text('Confirmar eliminación'),
+                      content: Text(
+                          '¿Estás seguro de que deseas eliminar este peso?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context, false);
+                          },
+                          child: Text('Cancelar'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            WeightService weightService = WeightService();
+                            weightService.deleteWeight(weightId);
+                            weightService.fetchWeights();
+                            Navigator.pop(context, true);
+                          },
+                          child: Text('ELIMINAR'),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirmDelete == true) {
+                    Navigator.pop(context, true);
+                  }
+                },
+                icon: Icon(
+                  Icons.delete,
+                  color: Colors.white,
+                ),
+                label: Text(
+                  'ELIMINAR',
+                  style: TextStyle(
+                    color: Colors.white,
+                  ),
+                ),
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all<Color>(Colors.red),
+                ),
+              ),
           ],
         ),
       ),

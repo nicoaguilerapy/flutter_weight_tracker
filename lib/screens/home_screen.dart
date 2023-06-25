@@ -16,19 +16,15 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    weightService.fetchWeights().then((_) {
-      setState(() {
-        weights = weightService.weights;
-      });
-    }).catchError((error) {
-      print('Error al obtener los pesos');
-    });
+    fetchWeights();
   }
 
   Future<void> fetchWeights() async {
     try {
       await weightService.fetchWeights();
-      setState(() {});
+      setState(() {
+        weights = weightService.weights;
+      });
     } catch (e) {
       print('Error al obtener los pesos');
     }
@@ -39,19 +35,30 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Weight Tracker'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: () {
+              fetchWeights();
+            },
+          ),
+        ],
       ),
       body: ListView.builder(
         itemCount: weights.length,
         itemBuilder: (context, index) {
           final weight = weights[index];
           return InkWell(
-            onTap: () {
-              Navigator.push(
+            onTap: () async {
+              final result = await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => WeightScreen(weight: weight),
                 ),
               );
+              if (result == true) {
+                fetchWeights();
+              }
             },
             child: CardWeight(weight: weight),
           );
@@ -59,13 +66,16 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          final result = await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => WeightScreen(weight: null),
             ),
           );
+          if (result == true) {
+            fetchWeights();
+          }
         },
       ),
     );
